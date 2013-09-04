@@ -1,3 +1,9 @@
+# About this fork
+
+I forked this from bbatsov's repo mainly for the purposes of changing
+the usage of parentheses with methods, and block syntax. I agree with
+99% of it, otherwise.
+
 # Prelude
 
 > Role models are important. <br/>
@@ -699,11 +705,10 @@ Never use `::` for regular method invocation.
    end
    ```
 
-* Omit parentheses around parameters for methods that are part of an
-  internal DSL (e.g. Rake, Rails, RSpec), methods that have
-  "keyword" status in Ruby (e.g. `attr_reader`, `puts`) and attribute
-  access methods. Use parentheses around the arguments of all other
-  method invocations.
+* Use parentheses around parameters for methods when the return value
+  is used. Omit parentheses for command methods. The exception is
+  for value-returning-methods that take no arguments, in which case
+  the principal of uniform access applies, and no parentheses are used.
 
     ```Ruby
     class Person
@@ -713,48 +718,35 @@ Never use `::` for regular method invocation.
     end
 
     temperance = Person.new('Temperance', 30)
-    temperance.name
+    name = temperance.name  # Uniform access, no parens
 
-    puts temperance.age
+    puts name
 
     x = Math.sin(y)
-    array.delete(e)
+    array.delete e  # Command method, as the return value is not used
 
     bowling.score.should == 0
     ```
 
-* Omit parentheses for method calls with no arguments.
-
-    ```Ruby
-    # bad
-    Kernel.exit!()
-    2.even?()
-    fork()
-    'test'.upcase()
-
-    # good
-    Kernel.exit!
-    2.even?
-    fork
-    'test'.upcase
-    ```
-
-* Prefer `{...}` over `do...end` for single-line blocks.  Avoid using
-  `{...}` for multi-line blocks (multiline chaining is always
-  ugly). Always use `do...end` for "control flow" and "method
-  definitions" (e.g. in Rakefiles and certain DSLs).  Avoid `do...end`
-  when chaining.
+* Use `{...}` instead of `do...end` for blocks where the return value is used.
+  This includes chaining, which is ugly with `do...end` blocks anyway. Never
+  use `do...end` blocks on a single line, even if it fits and the return value
+  is not important, as it looks nasty. Clarify that it is a block that "commands"
+  by putting it over several lines.
 
     ```Ruby
     names = ['Bozhidar', 'Steve', 'Sarah']
 
     # bad
+    names.each { |name| puts name }
+
+    # bad
+    names.each do |name| puts name end
+
+    # good
     names.each do |name|
       puts name
     end
-
-    # good
-    names.each { |name| puts name }
 
     # bad
     names.select do |name|
@@ -763,11 +755,15 @@ Never use `::` for regular method invocation.
 
     # good
     names.select { |name| name.start_with?('S') }.map { |name| name.upcase }
-    ```
 
-    Some will argue that multiline chaining would look OK with the use of {...}, but they should
-    ask themselves - is this code really readable and can the blocks' contents be extracted into
-    nifty methods?
+    # bad
+    squares = [2, 3, 4].map do |v|
+      v ** 2
+    end
+
+    # good
+    squares = [2, 3, 4].map { |v| v ** 2 }
+    ```
 
 * Avoid `return` where not required for flow of control.
 
